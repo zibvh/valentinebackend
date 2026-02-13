@@ -8,14 +8,33 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Helper function to create transporter at runtime
+function createTransporter() {
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+}
+
 // TRUTH FORM
 app.post("/send-truth", async (req, res) => {
   const { message } = req.body;
-
   try {
-    await sendEmail("Truth Form 💌", message);
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: "Truth Form 💌",
+      text: message
+    });
     res.json({ success: true });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ success: false });
   }
 });
@@ -23,32 +42,20 @@ app.post("/send-truth", async (req, res) => {
 // MESSAGE FORM
 app.post("/send-message", async (req, res) => {
   const { message } = req.body;
-
   try {
-    await sendEmail("Private Message 💕", message);
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: "Private Message 💕",
+      text: message
+    });
     res.json({ success: true });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ success: false });
   }
 });
 
-async function sendEmail(subject, text) {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: process.env.EMAIL_USER,
-    subject: subject,
-    text: text
-  });
-}
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server running...");
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
